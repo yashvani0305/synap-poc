@@ -1,0 +1,249 @@
+{
+  "info": {
+    "name": "Synapp POC API",
+    "description": "Quiz & Poll API with CQRS, JWT Auth, Matrix integration and Supabase",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5001", "type": "string" },
+    { "key": "jwt",       "value": "",                     "type": "string" },
+    { "key": "matrix_token", "value": "",                  "type": "string" },
+    { "key": "event_id",  "value": "",                     "type": "string" },
+    { "key": "event_title", "value": "",                   "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/signup", "host": ["{{base_url}}"], "path": ["api","auth","signup"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"pass123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.jwtToken)      pm.collectionVariables.set('jwt', res.jwtToken);",
+                  "if (res.matrixToken)   pm.collectionVariables.set('matrix_token', res.matrixToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"pass123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login1 (Matrix Direct)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login1", "host": ["{{base_url}}"], "path": ["api","auth","login1"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"pass123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type",   "value": "application/json" },
+              { "key": "Authorization",  "value": "Bearer {{jwt}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/auth/update-password", "host": ["{{base_url}}"], "path": ["api","auth","update-password"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"pass123\",\n  \"newPassword\": \"newpass456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization",    "value": "Bearer {{jwt}}" },
+              { "key": "x-matrix-token",   "value": "{{matrix_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/auth/logout", "host": ["{{base_url}}"], "path": ["api","auth","logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Event",
+      "item": [
+        {
+          "name": "Create Poll",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data?.eventId) pm.collectionVariables.set('event_id', res.data.eventId);",
+                  "if (res.data?.eventTitle) pm.collectionVariables.set('event_title', res.data.eventTitle);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/event", "host": ["{{base_url}}"], "path": ["api","event"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventName\": \"poll\",\n  \"eventTitle\": \"Friday Fun Poll\",\n  \"type\": \"create\",\n  \"question\": \"Favourite language?\",\n  \"options\": [\"JavaScript\", \"Python\", \"Go\", \"Rust\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Quiz",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data?.eventId) pm.collectionVariables.set('event_id', res.data.eventId);",
+                  "if (res.data?.eventTitle) pm.collectionVariables.set('event_title', res.data.eventTitle);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/event", "host": ["{{base_url}}"], "path": ["api","event"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventName\": \"quiz\",\n  \"eventTitle\": \"Math Quiz Round 1\",\n  \"type\": \"create\",\n  \"question\": \"What is 2 + 2?\",\n  \"options\": [\"1\", \"2\", \"4\", \"8\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/event", "host": ["{{base_url}}"], "path": ["api","event"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventName\": \"quiz\",\n  \"type\": \"update\",\n  \"eventId\": \"{{event_id}}\",\n  \"question\": \"Updated question?\",\n  \"options\": [\"A\", \"B\", \"C\", \"D\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Get My Events",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{jwt}}" }],
+            "url": { "raw": "{{base_url}}/api/event", "host": ["{{base_url}}"], "path": ["api","event"] }
+          }
+        },
+        {
+          "name": "Get Event By ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{jwt}}" }],
+            "url": { "raw": "{{base_url}}/api/event/{{event_id}}", "host": ["{{base_url}}"], "path": ["api","event","{{event_id}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poll",
+      "item": [
+        {
+          "name": "Cast Vote",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/event/{{event_id}}/vote", "host": ["{{base_url}}"], "path": ["api","event","{{event_id}}","vote"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"optionIndex\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Poll Results",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{jwt}}" }],
+            "url": { "raw": "{{base_url}}/api/event/{{event_id}}/results", "host": ["{{base_url}}"], "path": ["api","event","{{event_id}}","results"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quiz",
+      "item": [
+        {
+          "name": "Submit Answer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwt}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/event/{{event_title}}/answer", "host": ["{{base_url}}"], "path": ["api","event","{{event_title}}","answer"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"optionIndex\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Get My Answer",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{jwt}}" }],
+            "url": { "raw": "{{base_url}}/api/event/{{event_id}}/my-answer", "host": ["{{base_url}}"], "path": ["api","event","{{event_id}}","my-answer"] }
+          }
+        },
+        {
+          "name": "Get All Answers (Creator Only)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{jwt}}" }],
+            "url": { "raw": "{{base_url}}/api/event/{{event_id}}/answers", "host": ["{{base_url}}"], "path": ["api","event","{{event_id}}","answers"] }
+          }
+        }
+      ]
+    }
+  ]
+}

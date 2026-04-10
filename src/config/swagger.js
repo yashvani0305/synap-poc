@@ -21,18 +21,27 @@ const options = {
       schemas: {
         SignupRequest: {
           type: "object",
-          required: ["username", "password"],
+          required: ["username", "email", "password"],
           properties: {
             username: { type: "string", example: "testuser" },
+            email: { type: "string", format: "email", example: "test@example.com" },
             password: { type: "string", example: "pass123" },
           },
         },
         LoginRequest: {
           type: "object",
-          required: ["username", "password"],
+          required: ["email", "password"],
           properties: {
-            username: { type: "string", example: "testuser" },
+            email: { type: "string", format: "email", example: "test@example.com" },
             password: { type: "string", example: "pass123" },
+          },
+        },
+        UpdatePasswordRequest: {
+          type: "object",
+          required: ["currentPassword", "newPassword"],
+          properties: {
+            currentPassword: { type: "string", example: "oldpass123" },
+            newPassword: { type: "string", example: "newpass456" },
           },
         },
         LoginResponse: {
@@ -203,6 +212,44 @@ const options = {
                 },
               },
             },
+          },
+        },
+      },
+
+      // ─── UPDATE PASSWORD ─────────────────────────────────────────
+      "/api/auth/update-password": {
+        put: {
+          tags: ["Auth"],
+          summary: "Update password — validates current password, updates DB and Matrix",
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UpdatePasswordRequest" },
+                example: { currentPassword: "oldpass123", newPassword: "newpass456" },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: "Password updated successfully",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      message: { type: "string", example: "Password updated successfully" },
+                    },
+                  },
+                },
+              },
+            },
+            400: {
+              description: "Missing fields or incorrect current password",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/Error" } } },
+            },
+            401: { description: "Unauthorized — invalid JWT" },
           },
         },
       },

@@ -1,4 +1,4 @@
-import { loginService, signupService, logoutService } from "../services/auth.service.js";
+import { loginService, signupService, logoutService, updatePasswordService } from "../services/auth.service.js";
 import { loginToMatrix } from "../services/matrix.service.js";
 
 export const login1 = async (req, res) => {
@@ -20,8 +20,8 @@ export const login1 = async (req, res) => {
 
 const signup = async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const result = await signupService(username, password);
+    const { username, email, password } = req.body;
+    const result = await signupService(username, email, password);
     res.json({ message: "User created", ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -30,8 +30,8 @@ const signup = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const result = await loginService(username, password);
+    const { email, password } = req.body;
+    const result = await loginService(email, password);
     res.json(result);
   } catch (err) {
     res.status(401).json({ error: err.message });
@@ -48,4 +48,20 @@ const logout = async (req, res) => {
   }
 };
 
-export { signup, login, logout };
+const updatePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.userId;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "currentPassword and newPassword are required" });
+    }
+
+    await updatePasswordService(userId, currentPassword, newPassword);
+    res.json({ message: "Password updated successfully" });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+export { signup, login, logout, updatePassword };

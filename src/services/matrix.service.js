@@ -31,4 +31,16 @@ const logoutFromMatrix = async (matrixToken) => {
   );
 };
 
-export { loginToMatrix, verifyToken, logoutFromMatrix };
+const updateMatrixUserPassword = async (username, newPassword) => {
+  const adminData = await loginToMatrix();
+  const adminToken = adminData.access_token;
+  const matrixUserId = `@${username}:localhost`;
+
+  await axios.put(
+    `${BASE_URL}/_synapse/admin/v2/users/${encodeURIComponent(matrixUserId)}`,
+    { password: newPassword },
+    { headers: { Authorization: `Bearer ${adminToken}` } },
+  );
+};
+
+export { loginToMatrix, verifyToken, logoutFromMatrix, updateMatrixUserPassword };
